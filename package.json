@@ -1,0 +1,36 @@
+{
+  "name": "express-zones",
+  "version": "0.1.0",
+  "description": "Creates an API in Express to separate routes and middleware into zones",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint index.js src",
+    "precommit": "npm run lint"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HallM/express-zones"
+  },
+  "author": "Matt Hall <mdhall@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HallM/express-zones/issues"
+  },
+  "homepage": "https://github.com/HallM/express-zones",
+  "engines": {
+    "node": "6.x"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "express": "^4.15.3"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "express": "^4.15.3",
+    "husky": "^0.13.3"
+  }
+}
