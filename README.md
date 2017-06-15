@@ -15,9 +15,9 @@ Install the package using your JS package manager of choice, such as `npm` or `y
 
 For example, with `npm` or `yarn`:
 ```
-$ npm install --save @bouncingpixel/express-zones
+$ npm install --save express-zones
 
-$ yarn add @bouncingpixel/express-zones
+$ yarn add express-zones
 ```
 
 ### Using express-zones
@@ -28,7 +28,7 @@ Add express-zones to your express instance by calling the exported function with
 const express = require('express');
 
 const app = express();
-require('@bouncingpixel/express-zones')(app);
+require('express-zones')(app);
 ```
 
 To get a zone, use `app.zone(zoneName: string)` API where zoneName can also be a space separated list of zone names.
