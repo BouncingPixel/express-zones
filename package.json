@@ -1,10 +1,10 @@
 {
   "name": "express-zones",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Creates an API in Express to separate routes and middleware into zones",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint index.js src",
+    "lint": "eslint index.js src example",
     "precommit": "npm run lint"
   },
   "publishConfig": {
@@ -20,11 +20,6 @@
     "url": "https://github.com/HallM/express-zones/issues"
   },
   "homepage": "https://github.com/HallM/express-zones",
-  "engines": {
-    "node": "6.x"
-  },
-  "dependencies": {
-  },
   "peerDependencies": {
     "express": "^4.15.3"
   },

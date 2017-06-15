@@ -1,3 +1,9 @@
+/*
+ * express-zones
+ * Copyright(c) 2017 Matthew Hall
+ * MIT Licensed
+ */
+
 'use strict';
 
 const express = require('express');
@@ -21,10 +27,12 @@ methods.forEach(function(method) {
   Zone.prototype[method] = function(...args) {
     this.router[method](...args);
 
-    // add it to the union too
-    this._unionsIn.forEach(function(union) {
-      union[method](...args);
-    });
+    // add it to the union too, but only for use
+    if (method === 'use') {
+      this._unionsIn.forEach(function(union) {
+        union[method](...args);
+      });
+    }
   };
 });
 

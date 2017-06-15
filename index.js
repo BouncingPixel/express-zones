@@ -1,3 +1,9 @@
+/*
+ * express-zones
+ * Copyright(c) 2017 Matthew Hall
+ * MIT Licensed
+ */
+
 'use strict';
 
 const Zone = require('./src/zone');
@@ -38,8 +44,6 @@ function getZone(zone) {
 
 function routerMiddleware(req, res, next) {
   // try to find the first zone which has a route that matches it
-  // TODO: should we try to execute all which match? I think so!
-  // TODO: but... what about '/' since default is '/'...
   const reqPath = req.path;
   const reqMethod = req.method;
 
@@ -59,6 +63,22 @@ function routerMiddleware(req, res, next) {
         zone.router(req, res, next);
         return;
       }
+    }
+  }
+
+  // if no match was found, do we have a fallback zone we should apply?
+  const fallbackZoneName = req.app.get('fallback-zone');
+  if (fallbackZoneName) {
+    const fallbackZone = zonesByKey[fallbackZoneName];
+
+    if (fallbackZone) {
+      // if we have a zone, then apply it
+      fallbackZone.router(req, res, next);
+      return;
+    } else {
+      // if the zone was not found, we are going to error out
+      next(new Error(`Could not find zone with name '${fallbackZoneName}' to fallback to`));
+      return;
     }
   }
 
