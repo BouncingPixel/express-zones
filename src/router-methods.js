@@ -6,4 +6,4 @@
 
 'use strict';
 
-module.exports = require('methods').concat(['use', 'all']);
+module.exports = require('methods').concat(['all']);

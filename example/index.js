@@ -10,19 +10,36 @@ const app = express();
 require('..')(app);
 
 app.use(function(req, res, next) {
-  res.write(`This runs on everything ${req.url}\n`);
+  // this would run on everything
+  req.ranOnEverything = true;
   next();
 });
+
+app.zone('fallback').use(function(req, res, next) {
+  req.isFallbackZone = true;
+  res.write('This is in the fallback (no other) zone\n');
+  next();
+});
+
+app.get('/fallback', app.zone('fallback').fallback(), function(req, res) {
+  const isFallback =
+    !req.isSafeZone && !req.isAdminZone && req.isFallbackZone
+    ? 'yes' : 'no';
+
+  res.end(`Is /fallback in the fallback zone, but not the safe or admin? (should be yes) ${isFallback}`);
+});
+
+app.zone('default').use(function(req, res, next) {
+  req.isDefaultZone = true;
+  next();
+});
+
+// note, once a default is applied, fallbacks don't matter any more!
+app.use(app.zone('default').apply());
 
 app.zone('safe').use(function(req, res, next) {
   req.isSafeZone = true;
   res.write('This zone is safe\n');
-  next();
-});
-
-app.zone('unsafe').use(function(req, res, next) {
-  req.isUnsafeZone = true;
-  res.write('This zone is not safe\n');
   next();
 });
 
@@ -32,9 +49,13 @@ app.zone('admin').use(function(req, res, next) {
   next();
 });
 
-app.zone('fallback').use(function(req, res, next) {
-  req.isFallbackZone = true;
-  res.write('This zone is the fallback\n');
+app.zone('safe admin').use(function(req, res, next) {
+  res.write('This is a special safe-admin zone\n');
+  next();
+});
+
+app.zone('safe').use(function(req, res, next) {
+  res.write('This safe middleware is second\n');
   next();
 });
 
@@ -69,15 +90,9 @@ app.get('/starts-safe', function(req, res) {
   res.end(`Is /starts-safe safe and also started in safe? (should be yes) ${output}`);
 });
 
-app.get('/fallback', function(req, res) {
-  const isFallback =
-    !req.isSafeZone && !req.isAdminZone && req.isFallbackZone
-    ? 'yes' : 'no';
-
-  res.end(`Is /fallback only under fallback? (should be yes) ${isFallback}`);
+app.use(function(req, res) {
+  res.send('404');
 });
-
-app.set('fallback-zone', 'fallback');
 
 app.listen(3000, function() {
   console.log('App is listening on port 3000'); // eslint-disable-line no-console

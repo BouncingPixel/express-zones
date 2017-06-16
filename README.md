@@ -47,14 +47,26 @@ require('express-zones')(app);
 #### Adding zones and middleware/routes to zones
 
 Zones are automatically created the first time you reference a zone.
-To get a zone, use `app.zone(zoneName: string)` where zoneName can also be a space separated list of zone names.
-These multi-name zones, or union-zones, inherit middleware from all zones in the list.
-Only middleware added with `.use()` will be copied from a zone to a union zone.
-All middleware later added to a zone with `.use()` will also be copied into all union-zone which reference the zone.
+Zones can be fetched with `app.zone(zoneName: string)`.
+Middlewares and routes can be added to zones using the same function names as Express router, such as `zone.use()` for middleware and `zone.get()` for routes as just two examples.
+
+When a route is added with a function other than `zone.use()`, the zone is added as a middleware just before the route's middlewares. This allows all middlewares added to the app itself to be ran before the zone is.
+
+#### Union zones
+
+A zone name can also be a "union zone", which is a space separated list of zones.
+Union-zones, inherit middleware from the individual zones in the list.
+They will not inherit from other union zones, so "zoneA zoneB zoneC" would not inherit from "zoneA zoneB"
+Only middleware added with `.use()` will be copied from a zone to a union-zone.
+Adding middleware to a zone which is part of a union-zone will also add that middleware to the union zone.
+Middleware can also be added to the union zone for cases that only apply when all the listed zones apply.
 
 Because order of middleware matters, the order of zone names in a union zone also matter.
 Thus, `csrf-safe admin` and `admin csrf-safe` are considered different union-zones.
 Attempting to consider these the same would lead to different behavior depending on which was referenced first.
+For `csrf-safe admin`, all middlware in `csrf-safe` will be executed before `admin`, no matter when it is added.
+Any middleware added to the union-zone will execute after all individual zone's middleware.
+There is currently no way to interleave the middleware of a union zone nor is there a way to specify an explicit order of each middleware.
 
 ```js
 app.zone('csrf-safe').use(csrfMiddleware());
@@ -66,19 +78,58 @@ app.zone('admin').use(requiresAdminLevel);
 app.zone('csrf-safe admin').post('/admin/another-post', adminPostHandler);
 ```
 
-#### Fallback Zones
+#### Zones as middleware
 
-Fallback zones can be used to apply a zone or a union zone to routes when no zone is applied.
-They do not apply to every route nor do they apply if a route starts running in a zone and finishes outside of the zone.
+If you wish to use a zone as a default or use a zone in a route's middleware, `zone.apply()` will create a middlware.
+This middleware can be added to an app, such as `app.use(app.zone('myzone').apply())`.
+The middleware can also be added to a route not in a zone with `app.get('/page', app.zone('myzone').apply(), myHandler)`.
 
-To set the fallback zone, set the settings key `fallback-zone` on the Express app.
-The fallback zone can be a single zone or a union-zone.
-Fallback zones can be set at any time and can be changed while the app runs.
+This `apply` is the same that is added when adding a route to a zone.
+Therefore, these are functionally the same:
+```js
+// using a zone
+app.zone('myzone').get('/page', myHandler);
+
+// is the same as adding the zone as a middleware
+app.get('/page', app.zone('myzone').apply(), myHandler)
+```
+
+#### Fallback zones
+
+A zone can be used when no other zone has been run yet by using `zone.fallback(options)`.
+Zones added by default as a middleware will also prevent a fallback zone from running.
+Generally, fallbacks should be added in routes, but can be applied as middleware.
+If the fallback is added and a zone is later added, the fallback will still run.
 
 ```js
-// setting to a single zone
-app.set('fallback-zone', 'csrf-safe');
+// if no zone is ran, my-fallback will be ran
+app.get(
+  '/my-route',
+  app.zone('my-fallback').fallback(),
+  myHandler
+);
 
-// setting to a union zone
-app.set('fallback-zone', 'csrf-safe force-ssl');
+// even in this case, my-fallback is run since csrf-safe hasn't applied yet
+app.get(
+  '/another-route',
+  app.zone('my-fallback').fallback(),
+  app.zone('csrf-safe').apply(),
+  myHandler
+);
+
+// in these equal cases, my-fallback will not run
+app.get(
+  '/no-fallback',
+  app.zone('csrf-safe').apply(),
+  app.zone('my-fallback').fallback(),
+  myHandler
+);
+app.zone('csrf-safe').get(
+  '/no-fallback',
+  app.zone('my-fallback').fallback(),
+  myHandler
+);
+
+// this will apply the fallback to any route if nothing above this point has started a zone
+app.use(app.zone('my-fallback').fallback());
 ```
