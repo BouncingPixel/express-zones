@@ -12,7 +12,9 @@ const methods = require('./router-methods');
 function Zone(name, router, basedOn) {
   this.name = name;
   this.router = router;
-  this.middlewareRouter = express.Router();
+  this.middlewareRouter = express.Router({
+     mergeParams: true
+  });
   this.basedZones = basedOn || [];
 }
 
