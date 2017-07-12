@@ -1,6 +1,6 @@
 {
   "name": "express-zones",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Creates an API in Express to separate routes and middleware into zones",
   "main": "index.js",
   "scripts": {
